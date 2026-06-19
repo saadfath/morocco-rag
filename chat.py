@@ -1,6 +1,6 @@
 """
-Morocco Admin Procedures Chatbot
-Uses Groq API (llama3-70b) + TF-IDF RAG over procedures.json
+Morocco Admin Procedures CLI Chatbot
+Uses Groq API (llama-3.3-70b) + TF-IDF RAG over procedures.json
 """
 import os
 from groq import Groq
@@ -9,24 +9,24 @@ from rag import ProcedureRAG
 API_KEY = os.environ.get("GROQ_API_KEY", "")
 MODEL = "llama-3.3-70b-versatile"
 
-SYSTEM_PROMPT = """Tu es un assistant administratif marocain expert.
-Tu aides les citoyens marocains à comprendre les démarches administratives.
-Réponds en français (ou en arabe si l'utilisateur écrit en arabe, ou en anglais si en anglais).
-Base-toi UNIQUEMENT sur les informations fournies dans le contexte.
-Cite toujours le portail web officiel et le lien direct quand disponibles.
-Si l'information n'est pas dans le contexte, dis-le clairement.
-Sois concis, pratique et bienveillant."""
+SYSTEM = """Tu es un assistant administratif marocain expert, professionnel et bienveillant.
+Réponds en français, arabe ou anglais selon la langue de l'utilisateur.
+Base-toi UNIQUEMENT sur le contexte fourni.
+Structure chaque réponse ainsi :
+- Un titre clair avec le nom de la procédure
+- Les étapes numérotées et détaillées
+- Une section Documents requis avec liste
+- Une section Frais & Délai
+- Une section Liens officiels avec les URLs
+Sois précis, complet et professionnel."""
 
-def build_context(docs: list) -> str:
-    return "\n---\n".join(f"[{d['name_fr']}]\n{d['chunk']}" for d in docs) if docs else "Aucune procédure trouvée."
-
-def chat(rag: ProcedureRAG, client: Groq, history: list, user_msg: str) -> str:
+def chat(rag, client, history, user_msg):
     docs = rag.retrieve(user_msg, top_k=4)
-    context = build_context(docs)
+    context = "\n---\n".join(f"[{d['name_fr']}]\n{d['chunk']}" for d in docs)
     messages = [
-        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "system", "content": SYSTEM},
         {"role": "user", "content": f"Contexte:\n{context}"},
-        {"role": "assistant", "content": "Compris."},
+        {"role": "assistant", "content": "Compris, je vais structurer ma réponse de façon professionnelle."},
         *history[-6:],
         {"role": "user", "content": user_msg},
     ]
@@ -35,14 +35,14 @@ def chat(rag: ProcedureRAG, client: Groq, history: list, user_msg: str) -> str:
 
 def main():
     if not API_KEY:
-        print("❌ Set GROQ_API_KEY in your environment. Free key at: console.groq.com")
+        print("❌ Set GROQ_API_KEY. Free key at: console.groq.com")
         return
     print("⏳ Loading procedures...")
     rag = ProcedureRAG("procedures.json")
     client = Groq(api_key=API_KEY)
     history = []
     print(f"✅ {len(rag.procedures)} procedures loaded.")
-    print("🇲🇦 Morocco Admin Chatbot — type 'quit' to exit.\n")
+    print("🇲🇦 Morocco Admin Chatbot (FR/AR/EN) — type 'quit' to exit.\n")
     while True:
         user = input("You: ").strip()
         if not user:
