@@ -42,8 +42,20 @@ export default function AICopilot() {
   ]);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const { status, data, shareCode, uploadPassport, approvePassport, reset } =
-    usePassportStore();
+  const { demoDocument, scanDocument, govApprove, resetDemo } = usePassportStore();
+  const { status, citizenName, shareCode } = demoDocument;
+  const uploadPassport = scanDocument;
+  const approvePassport = govApprove;
+  const reset = resetDemo;
+
+  // Passport status badge colors
+  const statusColor: Record<string, string> = {
+    UNUPLOADED: "text-charcoal/50 bg-charcoal/5",
+    PENDING_GOV: "text-sahara bg-sahara/10",
+    VERIFIED: "text-atlas bg-atlas/10",
+    PENDING_CONSENT: "text-blue-600 bg-blue-50",
+    SHARED: "text-emerald-600 bg-emerald-50",
+  };
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -90,12 +102,8 @@ export default function AICopilot() {
     }, 800);
   };
 
-  // Passport status badge colors
-  const statusColor = {
-    UNUPLOADED: "text-charcoal/50 bg-charcoal/5",
-    PENDING_REVIEW: "text-sahara bg-sahara/10",
-    VERIFIED: "text-atlas bg-atlas/10",
-  }[status];
+  // statusColor defined above with full status map
+  const statusColorClass = statusColor[status] ?? "text-charcoal/50 bg-charcoal/5";
 
   return (
     <div className="flex h-[100dvh] flex-col bg-warm">
@@ -164,13 +172,13 @@ export default function AICopilot() {
                   <div className="mt-3 rounded-xl border border-charcoal/10 bg-white p-3 space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-semibold text-charcoal">
-                        {data.passportNumber}
+                        {"MA-2024-887734"}
                       </span>
-                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${statusColor}`}>
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${statusColorClass}`}>
                         {status}
                       </span>
                     </div>
-                    <p className="text-xs text-charcoal/50">{data.name} · Expires {data.expiry}</p>
+                    <p className="text-xs text-charcoal/50">{citizenName} · Expires {"2034-06-15"}</p>
                     {shareCode && status === "VERIFIED" && (
                       <div className="flex items-center gap-2 rounded-lg bg-atlas/10 px-3 py-2">
                         <ShieldCheck className="h-4 w-4 text-atlas" />
@@ -189,7 +197,7 @@ export default function AICopilot() {
                       </button>
                       <button
                         onClick={approvePassport}
-                        disabled={status !== "PENDING_REVIEW"}
+                        disabled={status !== "PENDING_GOV"}
                         className="flex items-center justify-center gap-1 rounded-lg bg-atlas py-2 text-[10px] font-medium text-white disabled:opacity-30"
                       >
                         <CheckCircle className="h-3 w-3" /> Approve

@@ -1,97 +1,74 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
-type PassportStatus = "UNUPLOADED" | "PENDING_REVIEW" | "VERIFIED";
+type DocStatus = "UNUPLOADED" | "PENDING_GOV" | "VERIFIED" | "PENDING_CONSENT" | "SHARED";
 
-interface PassportData {
-  name: string;
-  passportNumber: string;
-  expiry: string;
-}
-
-interface PassportState {
+interface DemoDocument {
   id: string;
-  status: PassportStatus;
-  data: PassportData;
+  citizenName: string;
+  status: DocStatus;
   shareCode: string;
-  // Actions
-  uploadPassport: () => void;
-  approvePassport: () => void;
-  reset: () => void;
 }
 
-const STORAGE_KEY = "ebeztami_passport";
+interface DemoStore {
+  demoDocument: DemoDocument;
+  scanDocument: () => void;
+  govApprove: () => void;
+  requestVerification: (code: string) => boolean;
+  citizenAuthorize: () => void;
+  resetDemo: () => void;
+}
 
-const defaultData: PassportData = {
-  name: "Youssef El Mansouri",
-  passportNumber: "MA-2024-887734",
-  expiry: "2034-06-15",
+const DEFAULT: DemoDocument = {
+  id: "PASSPORT-001",
+  citizenName: "",
+  status: "UNUPLOADED",
+  shareCode: "",
 };
 
-function rand6(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
-}
+const rand6 = () => Math.floor(100000 + Math.random() * 900000).toString();
 
-function load(): Partial<PassportState> {
-  if (typeof window === "undefined") return {};
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch {
-    return {};
-  }
-}
+export const useDemoStore = create<DemoStore>()(
+  persist(
+    (set, get) => ({
+      demoDocument: { ...DEFAULT },
 
-function save(state: Partial<PassportState>) {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  // Notify other tabs
-  window.dispatchEvent(new StorageEvent("storage", { key: STORAGE_KEY }));
-}
+      scanDocument() {
+        set((s) => ({
+          demoDocument: { ...s.demoDocument, status: "PENDING_GOV", citizenName: "Ahmed Alami" },
+        }));
+      },
 
-const saved = load();
+      govApprove() {
+        set((s) => ({
+          demoDocument: { ...s.demoDocument, status: "VERIFIED", shareCode: rand6() },
+        }));
+      },
 
-export const usePassportStore = create<PassportState>((set) => {
-  // Cross-tab sync via storage event
-  if (typeof window !== "undefined") {
-    window.addEventListener("storage", (e) => {
-      if (e.key === STORAGE_KEY) {
-        const fresh = load();
-        set({ ...fresh } as Partial<PassportState>);
-      }
-    });
-  }
+      requestVerification(code) {
+        const { demoDocument } = get();
+        if (code === demoDocument.shareCode && demoDocument.status === "VERIFIED") {
+          set((s) => ({
+            demoDocument: { ...s.demoDocument, status: "PENDING_CONSENT" },
+          }));
+          return true;
+        }
+        return false;
+      },
 
-  return {
-    id: (saved as PassportState).id ?? "PASSPORT-001",
-    status: (saved as PassportState).status ?? "UNUPLOADED",
-    data: (saved as PassportState).data ?? defaultData,
-    shareCode: (saved as PassportState).shareCode ?? "",
+      citizenAuthorize() {
+        set((s) => ({
+          demoDocument: { ...s.demoDocument, status: "SHARED" },
+        }));
+      },
 
-    uploadPassport() {
-      set((s) => {
-        const next = { ...s, status: "PENDING_REVIEW" as PassportStatus };
-        save({ id: next.id, status: next.status, data: next.data, shareCode: next.shareCode });
-        return next;
-      });
-    },
+      resetDemo() {
+        set({ demoDocument: { ...DEFAULT } });
+      },
+    }),
+    { name: "ebeztami_demo" }
+  )
+);
 
-    approvePassport() {
-      set((s) => {
-        const next = { ...s, status: "VERIFIED" as PassportStatus, shareCode: rand6() };
-        save({ id: next.id, status: next.status, data: next.data, shareCode: next.shareCode });
-        return next;
-      });
-    },
-
-    reset() {
-      const next = {
-        id: "PASSPORT-001",
-        status: "UNUPLOADED" as PassportStatus,
-        data: defaultData,
-        shareCode: "",
-      };
-      save(next);
-      set(next);
-    },
-  };
-});
+// Keep backward compat — old pages used usePassportStore
+export const usePassportStore = useDemoStore;
