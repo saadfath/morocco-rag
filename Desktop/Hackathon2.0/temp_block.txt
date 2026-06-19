@@ -1,0 +1,57 @@
+const AI_RESPONSE_LINES = [
+  "Analyse terminée.",
+  "",
+  "• 12 487 demandes analysées",
+  "• 11 931 validées automatiquement",
+  "• 556 nécessitent une vérification humaine",
+  "• 42 dossiers présentent un risque élevé",
+  "",
+  "Recommandation :",
+  "Prioriser l'examen manuel des 42 dossiers à risque élevé.",
+];
+
+function StreamingText({ visible, responseKey }: { visible: boolean; responseKey: number }) {
+  const [lines, setLines] = useState<string[]>([]);
+  const [done, setDone] = useState(false);
+
+  useEffect(() => {
+    if (!visible) { setLines([]); setDone(false); return; }
+    let li = 0; let ci = 0; const acc: string[] = [];
+    const iv = setInterval(() => {
+      if (li >= AI_RESPONSE_LINES.length) { setDone(true); clearInterval(iv); return; }
+      const cur = AI_RESPONSE_LINES[li];
+      if (ci === 0) acc.push("");
+      if (cur === "") { acc[li] = ""; li++; ci = 0; setLines([...acc]); return; }
+      ci++; acc[li] = cur.slice(0, ci); setLines([...acc]);
+      if (ci >= cur.length) { li++; ci = 0; }
+    }, 20);
+    return () => clearInterval(iv);
+  }, [visible, responseKey]);
+
+  if (!visible) return null;
+
+  return (
+    <div className="rounded-xl bg-blue-50 border border-blue-100 px-4 py-4 text-sm leading-relaxed text-gray-700 space-y-0.5">
+      <div className="flex items-center gap-2 mb-2">
+        <div className="h-6 w-6 rounded-lg bg-blue-600 flex items-center justify-center">
+          <Bot className="h-3.5 w-3.5 text-white" />
+        </div>
+        <span className="text-xs font-bold text-blue-700">GovPilot AI</span>
+        {!done && (
+          <span className="ml-auto flex items-center gap-1 text-[10px] text-blue-400">
+            <span className="h-1.5 w-1.5 rounded-full bg-blue-400 animate-pulse" />
+            Analyse en cours…
+          </span>
+        )}
+      </div>
+      {lines.map((l, i) => {
+        if (l === "") return <div key={i} className="h-1.5" />;
+        if (l.startsWith("•")) return <p key={i} className="text-gray-600">{l}</p>;
+        if (l === "Recommandation :") return <p key={i} className="font-semibold text-amber-600 mt-2">{l}</p>;
+        if (l === "Analyse terminée.") return <p key={i} className="font-semibold text-blue-700">{l}</p>;
+        return <p key={i}>{l}</p>;
+      })}
+      {!done && <span className="inline-block h-4 w-0.5 bg-blue-400 animate-pulse" />}
+    </div>
+  );
+}
