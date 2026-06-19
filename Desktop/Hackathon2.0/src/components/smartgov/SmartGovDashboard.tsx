@@ -116,7 +116,8 @@ function StreamingText({ visible, responseKey }: { visible: boolean; responseKey
 }
 
 function GovPilotChat() {
-  const [input, setInput] = useState("");
+  const [inputText, setInputText] = useState("");
+  const [userMessage, setUserMessage] = useState("");
   const [phase, setPhase] = useState<"idle" | "thinking" | "responding">("idle");
   const [conversation, setConversation] = useState(false);
   const [responseKey, setResponseKey] = useState(0);
@@ -124,7 +125,8 @@ function GovPilotChat() {
 
   const runDemo = useCallback((msg: string) => {
     if (!msg.trim()) return;
-    setInput(msg);
+    setUserMessage(msg);
+    setInputText("");
     setConversation(true);
     setPhase("thinking");
     setResponseKey((k) => k + 1);
@@ -132,8 +134,8 @@ function GovPilotChat() {
   }, []);
 
   function handleSubmit() {
-    if (phase === "thinking" || !input.trim()) return;
-    runDemo(input);
+    if (phase === "thinking" || !inputText.trim()) return;
+    runDemo(inputText);
   }
 
   return (
@@ -173,7 +175,7 @@ function GovPilotChat() {
                 <>
                   <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex justify-end">
                     <div className="max-w-[80%] rounded-xl bg-blue-700 px-4 py-3 shadow-sm">
-                      <p className="text-sm text-white">{input}</p>
+                      <p className="text-sm text-white">{userMessage}</p>
                     </div>
                   </motion.div>
                   {phase === "thinking" && (
@@ -206,13 +208,13 @@ function GovPilotChat() {
               <input
                 ref={inputRef}
                 type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
                 placeholder="Posez une question stratégique…"
                 className="flex-1 rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
               />
-              <button onClick={handleSubmit} disabled={phase === "thinking" || !input.trim()}
+              <button onClick={handleSubmit} disabled={phase === "thinking" || !inputText.trim()}
                 className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-700 text-white shadow-sm hover:bg-blue-800 disabled:opacity-40 transition-colors">
                 <Send className="h-5 w-5" />
               </button>
