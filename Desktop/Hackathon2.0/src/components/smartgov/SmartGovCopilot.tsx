@@ -133,7 +133,7 @@ function StreamingResponse({
           <Bot className="h-4 w-4 text-atlas-light" />
         </div>
         <span className="text-xs font-semibold text-atlas-light">
-          SmartGov AI Copilot
+          GovPilot
         </span>
         {!done && (
           <motion.span
@@ -239,7 +239,7 @@ function StreamingResponse({
               <div className="rounded-lg border border-atlas/20 bg-atlas/5 px-4 py-3">
                 <div className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-atlas-light">
                   <Zap className="h-3 w-3" />
-                  SmartGov AI
+                  GovPilot AI
                 </div>
                 <p className="mt-1 font-display text-xl font-bold text-atlas-light">
                   {AI_SECONDS} secondes
@@ -326,7 +326,7 @@ export function SmartGovCopilot() {
               </div>
               <div>
                 <h2 className="font-display text-lg font-bold text-gov-text">
-                  SmartGov AI Copilot
+                  GovPilot
                 </h2>
                 <p className="text-xs text-gov-muted">
                   Assistant stratégique pour les administrations publiques

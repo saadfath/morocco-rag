@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { LayoutDashboard, Sparkles, Bot } from "lucide-react";
+import { LayoutDashboard, Sparkles } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { WalletStats } from "@/components/dashboard/WalletStats";
 import { WalletHero } from "@/components/dashboard/WalletHero";
@@ -11,12 +11,12 @@ import { CategoryGrid } from "@/components/dashboard/CategoryGrid";
 import { CategoryView } from "@/components/dashboard/CategoryView";
 import { DocumentModal } from "@/components/dashboard/DocumentModal";
 import { ScanDocument } from "@/components/dashboard/ScanDocument";
-import { GovPilot } from "@/components/dashboard/GovPilot";
+
 import AICopilot from "@/components/AICopilot";
 import { WALLET_DOCUMENTS, getWalletStats, USER } from "@/lib/wallet-data";
 import type { DocumentCategory, WalletDocument } from "@/components/dashboard/types";
 
-type Tab = "wallet" | "govpilot" | "copilot";
+type Tab = "wallet" | "copilot";
 
 export function WalletDashboard() {
   const [tab, setTab] = useState<Tab>("wallet");
@@ -51,17 +51,7 @@ export function WalletDashboard() {
           >
             <AICopilot />
           </motion.div>
-        ) : tab === "govpilot" ? (
-          <motion.div
-            key="govpilot"
-            initial={{ opacity: 0, x: 40 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 40 }}
-            transition={{ type: "spring", stiffness: 350, damping: 32 }}
-            className="h-[100dvh]"
-          >
-            <GovPilot />
-          </motion.div>
+
         ) : (
           <motion.div
             key="wallet"
@@ -92,7 +82,7 @@ export function WalletDashboard() {
 
                     <WalletHero documents={documents} onSelect={setSelectedDoc} />
                     <WalletStats total={stats.total} pending={stats.pending} expiring={stats.expiring} />
-                    <ProactiveBanner onOpenAssistant={() => setTab("govpilot")} />
+                    <ProactiveBanner onOpenAssistant={() => setTab("copilot")} />
                     <CategoryGrid documents={documents} onSelect={setSelectedCategory} />
                   </>
                 ) : (
@@ -120,17 +110,11 @@ export function WalletDashboard() {
             label="Portefeuille"
           />
           <TabButton
-            active={tab === "govpilot"}
-            onClick={() => setTab("govpilot")}
+            active={tab === "copilot"}
+            onClick={() => setTab("copilot")}
             icon={<Sparkles className="h-4 w-4" />}
             label="GovPilot"
             accent
-          />
-          <TabButton
-            active={tab === "copilot"}
-            onClick={() => setTab("copilot")}
-            icon={<Bot className="h-4 w-4" />}
-            label="Copilot"
           />
         </div>
       </div>
@@ -164,13 +148,12 @@ function TabButton({
       whileHover={{ scale: 1.03 }}
       whileTap={{ scale: 0.96 }}
       onClick={onClick}
-      className={`flex flex-1 items-center justify-center gap-2 rounded-2xl py-3.5 shadow-card transition-colors ${
-        active
-          ? accent
-            ? "bg-gradient-to-r from-atlas to-atlas-dark text-white shadow-ambient"
-            : "bg-charcoal text-white"
-          : "glass text-charcoal/60 hover:text-charcoal"
-      }`}
+      className={`flex flex-1 items-center justify-center gap-2 rounded-2xl py-3.5 shadow-card transition-colors ${active
+        ? accent
+          ? "bg-gradient-to-r from-atlas to-atlas-dark text-white shadow-ambient"
+          : "bg-charcoal text-white"
+        : "glass text-charcoal/60 hover:text-charcoal"
+        }`}
     >
       {icon}
       <span className="text-[12px] font-semibold">{label}</span>
